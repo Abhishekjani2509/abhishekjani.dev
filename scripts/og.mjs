@@ -94,7 +94,7 @@ const svg = await satori(
                     lineHeight: 1.4,
                   },
                   children:
-                    "Event-driven systems, cloud infrastructure, and AI tooling.",
+                    "Full-stack systems, from React interfaces through CI/CD and cloud deployment.",
                 },
               },
             ],

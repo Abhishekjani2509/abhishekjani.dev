@@ -11,7 +11,7 @@ export const site = {
   linkedin: "https://www.linkedin.com/in/abhishek-jani-97b8781a7/",
   resume: "/Abhishek-Jani-Resume.pdf",
   description:
-    "Software engineer building backend services that hold up in production, from schema design and API contracts through CI/CD and cloud deployment. Most recently, AI agent infrastructure.",
+    "Software engineer building full-stack systems that hold up in production, from React interfaces and API contracts through CI/CD and cloud deployment. This past year, AI agent infrastructure.",
 } as const;
 
 // The site is one page. These are its sections, in document order, and they
