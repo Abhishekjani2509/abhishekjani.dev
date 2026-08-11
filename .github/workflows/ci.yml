@@ -1,0 +1,55 @@
+name: CI
+
+# Vercel already builds and deploys every push. This runs the same build a step
+# earlier, on the pull request, so a break shows up as a failed check next to the
+# diff instead of as a rejected deployment after merge.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push supersedes the run in flight for the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the engines field in package.json.
+          node-version: 22
+          cache: npm
+
+      # `ci` rather than `install`: fails if package-lock.json is out of sync,
+      # which is the failure mode that only shows up on a clean machine.
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Catches the case where an asset builds locally but was never committed.
+      - name: Check expected pages were produced
+        run: |
+          test -f dist/index.html
+          test -f dist/sitemap-0.xml
+          test -f dist/og.png
+          echo "pages built: $(find dist -name '*.html' | wc -l | tr -d ' ')"
+
+      # The site's prose avoids em-dashes. Reported as a warning rather than a
+      # failure, so it flags drift without blocking a push.
+      - name: Check prose for em-dashes
+        run: |
+          if grep -rlP '[\x{2013}\x{2014}]' --include='*.html' dist/ > /tmp/hits; then
+            echo "::warning::Em-dash or en-dash found in: $(tr '\n' ' ' < /tmp/hits)"
+          else
+            echo "no em-dashes in built output"
+          fi
