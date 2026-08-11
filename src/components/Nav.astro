@@ -242,6 +242,14 @@ const hrefFor = (id: string) => (isHome ? `#${id}` : `/#${id}`);
     color: var(--accent);
   }
 
+  /* .nav-link-file sets flex, but .nav-panel-link's `display: block` is later in
+     the sheet and wins, which put the icon on its own line. Raise specificity. */
+  .nav-panel-link.nav-link-file {
+    align-items: center;
+    display: flex;
+    gap: 0.375rem;
+  }
+
   /* Small tablet and up: the section links fit on one line beside the name,
      so the panel and its button are no longer needed. */
   @media (min-width: 48rem) {
