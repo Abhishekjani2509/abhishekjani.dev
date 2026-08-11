@@ -1,5 +1,7 @@
 # abhishekjani.dev
 
+[![CI](https://github.com/Abhishekjani2509/abhishekjani.dev/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhishekjani2509/abhishekjani.dev/actions/workflows/ci.yml)
+
 Personal site. Single page with anchored sections, plus unlisted case study
 pages for each project.
 
