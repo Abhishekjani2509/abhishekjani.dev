@@ -1,0 +1,53 @@
+---
+title: "Amortize"
+tagline: "A local proxy that makes AI agents cheaper to run, with a cost ledger that proves it."
+year: "2026"
+track: "agents"
+kind: "team"
+stack: ["Python", "FastAPI", "Snowflake", "SQLite", "Streamlit"]
+repo: "https://github.com/Abhishekjani2509/Amort"
+metrics:
+  - value: "28%"
+    label: "fewer tokens on a cold run, at output parity"
+  - value: "97%"
+    label: "fewer tokens when a run repeats"
+  - value: "1"
+    label: "environment variable to adopt it"
+order: 1
+---
+
+## The problem
+
+Agent workloads get expensive in two distinct ways, and most tooling only addresses one of them.
+
+The first is per-call waste. Every request carries tool schemas, prior results, and accumulated context the model does not need in order to answer. The second is repetition. Agents re-derive the same procedure from scratch every time they see a task they have already solved correctly.
+
+The usual fixes ask you to change your code: swap SDKs, adopt a framework, wrap your calls. That is a high price for an optimization, and it means the optimization cannot be removed without another migration.
+
+## The approach
+
+Amortize sits between the client and the model as a local proxy. Adoption is one environment variable:
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:4000
+```
+
+Existing code keeps working. The Anthropic SDK keeps working. Claude Code keeps working. Nothing knows the proxy is there except the bill.
+
+Two optimizer layers run behind that interface.
+
+**Lightening** compacts tool schemas into stubs backed by a synthetic search tool, and spills oversized results to disk behind handles the model can dereference on demand. The model sees a smaller context carrying the same information.
+
+**Skill compilation** records each run as a case, distils repeat patterns into a replayable procedure, and re-executes that procedure as code rather than asking the model to reason it out again.
+
+## Proving it
+
+The interesting engineering problem was not the optimization. It was trust. An optimizer that quietly degrades output is worse than no optimizer, because you cannot tell when it has failed you.
+
+So every claim is backed by two mechanisms. A **parity grader** checks that optimized output is field-identical to what an unoptimized run produced, and a run only counts as a win if parity holds. A **per-step cost ledger** writes to Snowflake, with automatic SQLite fallback, batched writes, retries, and mid-run degradation handling that replays the in-flight buffer rather than dropping it.
+
+The result is that every number in the project traces back to a ledger row. On the demo task, a cold run came in at 28% fewer tokens with identical output, and the repeat run replayed a verified skill for 97% fewer tokens with parity confirmed.
+
+## The tradeoff
+
+The Snowflake dependency is heavier than the project strictly needs. SQLite carries the entire workload for a single developer, and Snowflake only earns its place once you are aggregating spend across a team. Defaulting to SQLite and making Snowflake the opt-in would have been the better call.

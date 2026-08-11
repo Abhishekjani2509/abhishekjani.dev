@@ -1,0 +1,40 @@
+---
+title: "DocuPop"
+tagline: "A serverless document pipeline that turns scanned paperwork into queryable data."
+year: "2026"
+track: "backend"
+kind: "personal"
+role: "Graduate capstone"
+stack: ["TypeScript", "Next.js", "Python", "AWS Lambda", "SQS", "Aurora", "Terraform"]
+repo: "https://github.com/Abhishekjani2509/Cpsc_597-DocuPop"
+metrics:
+  - value: "100%"
+    label: "of infrastructure defined in Terraform"
+  - value: "5"
+    label: "document formats accepted end to end"
+order: 4
+---
+
+## The problem
+
+Extracting structured data from documents is easy to demo and hard to operate. A single file through a single OCR call works on the first try. The difficulty appears at volume: OCR is slow and rate limited, failures are routine rather than exceptional, and a synchronous request cannot wait for any of it.
+
+## The approach
+
+The core decision was to decouple ingestion from compute. Uploads land in S3 and enqueue a job on SQS. A worker Lambda picks the job up, runs it through Textract, and writes results back. Nothing about the upload path depends on OCR being fast, available, or successful right now.
+
+That separation is what makes the failure handling tractable. Retries have somewhere to live, dead-letter handling catches what never succeeds, and a Textract outage degrades throughput instead of taking the product down.
+
+## What I built
+
+Users sign up through Cognito with email verification, upload documents in any of five formats, and define their own data tables describing what should be extracted. Jobs run through Textract with optional custom adapters and queries, and every extracted field carries a confidence score.
+
+Those scores drive a Smart Review workflow. Low confidence extractions surface in a review queue where a human approves or corrects them, rather than silently landing wrong data in a table. An analytics dashboard reports processing quality and adapter performance over time, which is what tells you whether a custom adapter is actually earning its complexity.
+
+## Operations
+
+All infrastructure is defined in Terraform, so the environment is reproducible and reviewable rather than assembled by hand in a console. Build, test, and deploy run through GitHub Actions. CloudWatch carries logs, metrics, and traces, which is what makes a failed document traceable from upload through to the specific worker invocation that dropped it.
+
+## What I would change
+
+The Smart Review queue treats every low confidence field the same way. In practice some fields matter far more than others, and a total on an invoice deserves review at a threshold that a street address does not. Per-field confidence thresholds would have cut review volume substantially without costing accuracy where it counts.

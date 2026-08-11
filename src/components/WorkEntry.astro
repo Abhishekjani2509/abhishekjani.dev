@@ -1,0 +1,94 @@
+---
+import { Icon } from "astro-icon/components";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  entry: CollectionEntry<"projects">;
+}
+
+const { entry } = Astro.props;
+const p = entry.data;
+
+const trackLabel =
+  p.track === "backend" ? "Backend systems" : "Agent infrastructure";
+---
+
+<!-- Full-width entry rather than a keyed two-column row: the year and track
+     are short enough to sit inline above the title, which gives the tagline
+     and the metrics the whole measure to work with. -->
+<article
+  class="group relative border-t border-rule py-12 transition-colors duration-300 hover:border-rule-strong sm:py-16"
+  data-reveal
+>
+  <div class="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+    <p class="font-mono text-[14px] text-ink-muted tnum">{p.year}</p>
+    <p class="text-[14px] text-accent">{trackLabel}</p>
+  </div>
+
+  <h3
+    class="mt-3 font-display text-[1.875rem] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[2.25rem]"
+  >
+    <!-- Stretched link: the whole row targets the repo, but only the title is
+         announced, so the reading order stays clean for screen readers. -->
+    <a
+      href={p.repo}
+      target="_blank"
+      rel="noreferrer"
+      class="transition-colors duration-200 after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
+    >
+      {p.title}
+      <span class="sr-only">, source on GitHub, opens in a new tab</span>
+    </a>
+  </h3>
+
+  <p class="mt-3.5 max-w-[62ch] text-[17.5px] leading-relaxed text-ink-secondary">
+    {p.tagline}
+  </p>
+
+  {
+    p.metrics && p.metrics.length > 0 && (
+      <dl class="relative mt-8 flex flex-wrap gap-x-14 gap-y-6 pl-5">
+        <span
+          class="metric-rule absolute left-0 top-0 h-full w-px bg-accent/40 transition-colors duration-300 group-hover:bg-accent"
+          aria-hidden="true"
+        />
+        {p.metrics.map((m) => (
+          <div class="max-w-[18ch]">
+            <dt class="sr-only">{m.label}</dt>
+            <dd>
+              <span
+                class="block font-mono text-[2.125rem] font-medium leading-none tracking-tight text-accent tnum"
+                data-count={m.value}
+              >
+                {m.value}
+              </span>
+              <span class="mt-2.5 block text-[14px] leading-snug text-ink-muted">
+                {m.label}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
+
+  <div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <!-- The affordance for the stretched link above, not a second link, so the
+         row has exactly one target. -->
+    <span
+      class="inline-flex items-center gap-1.5 text-[15px] font-medium text-accent"
+      aria-hidden="true"
+    >
+      <Icon name="ph:github-logo" class="size-[17px]" />
+      Source
+      <Icon
+        name="ph:arrow-up-right"
+        class="size-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+      />
+    </span>
+
+    <span class="font-mono text-[13.5px] text-ink-muted">
+      {p.stack.join(" / ")}
+    </span>
+  </div>
+</article>

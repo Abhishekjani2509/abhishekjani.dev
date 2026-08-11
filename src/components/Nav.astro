@@ -1,0 +1,376 @@
+---
+import { Icon } from "astro-icon/components";
+import { Image } from "astro:assets";
+import { site, sections } from "../lib/site";
+import headshot from "../assets/headshot.jpg";
+import ThemeToggle from "./ThemeToggle.astro";
+
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isHome = path === "/";
+
+// Case study pages live off the single page, so their anchors travel back to
+// it first.
+const hrefFor = (id: string) => (isHome ? `#${id}` : `/#${id}`);
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-rule/70 bg-canvas/85 backdrop-blur-md"
+>
+  <nav class="nav-bar" aria-label="Primary">
+    <!-- Portrait then name, then the sections, reading left to right. The
+         image is decorative here: the adjacent text already names him, so
+         announcing it again would just repeat. -->
+    <a href={hrefFor("home")} class="nav-brand">
+      <Image
+        src={headshot}
+        alt=""
+        width={72}
+        height={72}
+        densities={[1, 2]}
+        loading="eager"
+        class="nav-avatar"
+      />
+      {site.name}
+    </a>
+
+    <ul class="nav-links">
+      {
+        sections.map((s) => (
+          <li>
+            <a href={hrefFor(s.id)} data-navlink={s.id} class="nav-link">
+              {s.label}
+            </a>
+          </li>
+        ))
+      }
+      <!-- Resume is a file rather than a section, so it carries an icon and
+           no scroll-spy hook. -->
+      <li>
+        <a href={site.resume} class="nav-link nav-link-file">
+          <Icon name="ph:file-arrow-down" class="size-4" aria-hidden="true" />
+          Resume
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-end">
+      <a
+        href={site.github}
+        target="_blank"
+        rel="noreferrer"
+        class="nav-icon"
+        aria-label="GitHub profile, opens in a new tab"
+      >
+        <Icon name="ph:github-logo" class="size-[18px]" aria-hidden="true" />
+      </a>
+
+      <ThemeToggle />
+
+      <button
+        type="button"
+        id="menu-toggle"
+        class="nav-icon nav-burger"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label="Open menu"
+      >
+        <Icon name="ph:list" class="size-[18px]" aria-hidden="true" />
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile panel. Hidden from the accessibility tree when closed rather than
+       only visually, so it never strands a screen reader in offscreen links. -->
+  <div id="mobile-menu" class="nav-panel" hidden>
+    <ul>
+      {
+        sections.map((s) => (
+          <li>
+            <a
+              href={hrefFor(s.id)}
+              data-navlink={s.id}
+              data-menu-item
+              class="nav-panel-link"
+            >
+              {s.label}
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a href={site.resume} data-menu-item class="nav-panel-link nav-link-file">
+          <Icon name="ph:file-arrow-down" class="size-4" aria-hidden="true" />
+          Resume
+        </a>
+      </li>
+    </ul>
+  </div>
+</header>
+
+<style>
+  /* Breakpoints are written out here rather than as utilities because the bar
+     has three genuinely different layouts, and keeping them in one place makes
+     the sequence readable: phone, small tablet, desktop. */
+
+  .nav-bar {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    height: 3.25rem; /* tight: 52px */
+    margin-inline: auto;
+    max-width: 64rem;
+    padding-inline: 1.25rem;
+  }
+
+  .nav-brand {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--ink);
+    display: flex;
+    flex-shrink: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    letter-spacing: -0.01em;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  /* Full colour at this size. The desaturation the large portrait needed was
+     to stop it fighting the palette, and a 28px circle does not fight anything. */
+  .nav-avatar {
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    height: 1.75rem;
+    object-fit: cover;
+    transition: border-color 0.2s ease;
+    width: 1.75rem;
+  }
+
+  .nav-brand:hover .nav-avatar {
+    border-color: var(--accent);
+  }
+
+  .nav-brand:hover {
+    color: var(--accent);
+  }
+
+  /* Section links are collapsed into the panel on phones. */
+  .nav-links {
+    display: none;
+  }
+
+  .nav-link {
+    border-radius: 4px;
+    color: var(--ink-secondary);
+    display: block;
+    font-size: 0.9375rem;
+    padding: 0.375rem 0.5rem;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .nav-link:hover {
+    color: var(--ink);
+  }
+
+  .nav-link[aria-current="true"] {
+    color: var(--accent);
+  }
+
+  /* The file link sits in the same row but reads as an action, not a section. */
+  .nav-link-file {
+    align-items: center;
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .nav-end {
+    align-items: center;
+    display: flex;
+    gap: 0.125rem;
+    margin-left: auto;
+  }
+
+  .nav-icon {
+    align-items: center;
+    border-radius: 4px;
+    color: var(--ink-secondary);
+    display: grid;
+    height: 2.25rem;
+    place-items: center;
+    transition: color 0.2s ease;
+    width: 2.25rem;
+  }
+
+  .nav-icon:hover {
+    color: var(--ink);
+  }
+
+  .nav-icon:active {
+    transform: translateY(1px);
+  }
+
+  .nav-burger {
+    border: 1px solid var(--rule);
+  }
+
+  .nav-panel {
+    border-top: 1px solid var(--rule);
+  }
+
+  .nav-panel ul {
+    margin-inline: auto;
+    max-width: 64rem;
+    padding: 0.5rem 1.25rem 0.75rem;
+  }
+
+  .nav-panel-link {
+    border-radius: 4px;
+    color: var(--ink-secondary);
+    display: block;
+    font-size: 1rem;
+    padding: 0.625rem 0;
+    transition: color 0.2s ease;
+  }
+
+  .nav-panel-link:hover {
+    color: var(--ink);
+  }
+
+  .nav-panel-link[aria-current="true"] {
+    color: var(--accent);
+  }
+
+  /* Small tablet and up: the section links fit on one line beside the name,
+     so the panel and its button are no longer needed. */
+  @media (min-width: 48rem) {
+    .nav-bar {
+      gap: 1.25rem;
+      height: 3.5rem;
+      padding-inline: 2rem;
+    }
+
+    .nav-links {
+      align-items: center;
+      display: flex;
+      gap: 0.125rem;
+    }
+
+    .nav-end {
+      gap: 0.25rem;
+    }
+
+    .nav-burger,
+    .nav-panel {
+      display: none;
+    }
+  }
+
+  /* Desktop: a little more air once there is room for it. */
+  @media (min-width: 64rem) {
+    .nav-bar {
+      gap: 2rem;
+      height: 3.75rem;
+    }
+
+    .nav-link {
+      padding-inline: 0.75rem;
+    }
+  }
+
+  /* Landscape phones are short, so the bar gives height back to content. */
+  @media (max-height: 30rem) {
+    .nav-bar {
+      height: 3rem;
+    }
+  }
+</style>
+
+<script>
+  // ---- Mobile menu -------------------------------------------------------
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+
+  const setMenu = (open: boolean) => {
+    if (!toggle || !menu) return;
+    menu.hidden = !open;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  };
+
+  toggle?.addEventListener("click", () => setMenu(menu?.hidden ?? true));
+
+  // The destination is on this page, so leaving the panel open would cover it.
+  menu?.querySelectorAll("[data-menu-item]").forEach((el) => {
+    el.addEventListener("click", () => setMenu(false));
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu && !menu.hidden) {
+      setMenu(false);
+      toggle?.focus();
+    }
+  });
+
+  // Resizing up to tablet hides the button, which would otherwise strand the
+  // panel open with no way to close it.
+  window
+    .matchMedia("(min-width: 48rem)")
+    .addEventListener("change", (e) => e.matches && setMenu(false));
+
+  // ---- Deep-link correction ----------------------------------------------
+  // Landing on /#projects scrolls before the web fonts have swapped in, so the
+  // layout shifts underneath the browser and it settles in the wrong place.
+  if (location.hash) {
+    const jump = () => {
+      const target = document.querySelector(location.hash);
+      if (!target) return;
+
+      // scrollIntoView({ behavior: "auto" }) still defers to the CSS
+      // scroll-behavior, so smooth has to be switched off around the call.
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      target.scrollIntoView({ block: "start" });
+      root.style.scrollBehavior = previous;
+    };
+
+    window.addEventListener("load", () => {
+      requestAnimationFrame(() => requestAnimationFrame(jump));
+    });
+  }
+
+  // ---- Active section ----------------------------------------------------
+  const sectionEls = document.querySelectorAll<HTMLElement>("[data-section]");
+
+  if (sectionEls.length) {
+    const links = document.querySelectorAll<HTMLElement>("[data-navlink]");
+
+    const setActive = (id: string) => {
+      links.forEach((link) => {
+        if (link.dataset.navlink === id) link.setAttribute("aria-current", "true");
+        else link.removeAttribute("aria-current");
+      });
+    };
+
+    // Track everything on screen and treat the topmost as current, so the
+    // highlight never flickers between two overlapping sections.
+    const visible = new Set<string>();
+    const order = Array.from(sectionEls).map((el) => el.id);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+        const current = order.find((id) => visible.has(id));
+        if (current) setActive(current);
+      },
+      { rootMargin: "-72px 0px -55% 0px" },
+    );
+
+    sectionEls.forEach((el) => observer.observe(el));
+  }
+</script>

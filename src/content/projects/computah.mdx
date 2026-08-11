@@ -1,0 +1,35 @@
+---
+title: "Computah"
+tagline: "Coding agents that verify their own work in a real browser, driven from Discord, Slack, or voice."
+year: "2026"
+track: "agents"
+kind: "team"
+role: "MCP tool interface and the Playwright verification loop"
+team: "4 people"
+stack: ["TypeScript", "Next.js", "Playwright", "MCP", "InsForge"]
+repo: "https://github.com/Abhishekjani2509/Computah"
+metrics:
+  - value: "3"
+    label: "client transports kept in sync"
+order: 5
+---
+
+## The problem
+
+A coding agent finishes a task and reports success. That report is the agent's own opinion of its work, and nobody has looked at the result. Someone still has to open the change, click through it, and find out whether it actually does what was asked. That human check is the slow step in every agent workflow, and it is the one nobody has automated.
+
+The second problem is that the people steering the agent are rarely in the same place. One is in Discord, one is in Slack, one is talking out loud. The agent hears from whoever happens to be in the right window.
+
+## What I built
+
+I owned two pieces of this, built for the InsForge Agentic Dev Tools Hackathon on a team of four.
+
+**The MCP tool interface.** A tool surface that Claude Code and Cursor call directly, exposing verification as something the agent can invoke mid-task rather than a step a human runs afterward. The agent asks for its own work to be checked and gets an answer back it can act on.
+
+**The Playwright verification loop.** When an agent says it is done, this opens the change in a real Chromium instance and drives it like a QA tester working toward a plain English goal. It clicks, types, screenshots each step, and watches the console for errors. It then returns a pass or fail verdict, which is the part that matters: a verdict closes the build, test, fix loop without a human in it, where a screenshot would just move the reviewing back to a person.
+
+I also worked on real time session sync across the browser, Discord, and voice clients. That sounds like plumbing and was not. Three transports with different latencies and different delivery guarantees have to converge on one conversation state, so event ordering was the actual problem rather than the connections themselves.
+
+## What I would do differently
+
+The verification loop judges against a plain English goal, which makes it flexible and makes its failures hard to debug. When a verdict is wrong you cannot tell whether the agent misread the page or misread the goal. Structured assertions alongside the natural language goal would have kept the flexibility while making failures diagnosable.

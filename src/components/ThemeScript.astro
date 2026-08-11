@@ -1,0 +1,23 @@
+---
+// Runs before first paint so the page never flashes the wrong theme.
+// Deliberately inline and un-bundled: a deferred module would paint first.
+---
+
+<script is:inline>
+  (function () {
+    try {
+      var stored = localStorage.getItem("theme");
+      var theme =
+        stored === "light" || stored === "dark"
+          ? stored
+          : window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) {
+      // Private mode can throw on localStorage. Fall back to light rather than
+      // leaving the attribute unset, which would render an unstyled canvas.
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  })();
+</script>

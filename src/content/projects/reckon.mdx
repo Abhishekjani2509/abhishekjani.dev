@@ -1,0 +1,57 @@
+---
+title: "Reckon"
+tagline: "An event-sourced wallet ledger where the audit trail and the data are the same artifact."
+year: "2026"
+track: "backend"
+kind: "personal"
+stack: ["Java 21", "Spring Boot 3", "PostgreSQL", "Redpanda", "Redis", "Next.js"]
+repo: "https://github.com/Abhishekjani2509/reckon"
+metrics:
+  - value: "0"
+    label: "balances stored, every one derived by replay"
+  - value: "1"
+    label: "command brings up the entire system"
+order: 2
+---
+
+## The problem
+
+The conventional wallet design gives an account a `balance` column and updates it. Deposit fifty dollars and it moves from 100 to 150. The previous value is gone.
+
+That is fine until a balance turns out to be wrong. At that point the evidence of how it got that way has already been overwritten by the bug that caused it. You are debugging a crime scene that the criminal cleaned.
+
+## The approach
+
+Reckon never stores a balance. It stores the facts that produce one:
+
+```
+AccountOpened(owner=abhishek, currency=USD)
+MoneyDeposited(amountMinor=5000)
+MoneyWithdrawn(amountMinor=2000)
+```
+
+The balance is 3000 because those three things happened, and the log proves it. State is a fold over history rather than a cell to be overwritten. The audit trail is not a secondary system that has to be kept in sync with the data. It *is* the data.
+
+## What I built
+
+I implemented the distributed systems patterns directly rather than reaching for a framework, because the point of the project was to understand them:
+
+- **An append-only event store** on PostgreSQL with optimistic concurrency, so two concurrent commands against the same aggregate cannot interleave into a corrupt state.
+- **The transactional outbox pattern**, so an event is appended and queued for publication in the same database transaction. There is no window where the event store and the broker disagree.
+- **Saga orchestration with compensating actions** for transfers, which span two accounts and therefore cannot rely on a single transaction.
+- **Command idempotency and snapshots**, so retries are safe and long-lived accounts do not pay a growing replay cost on every read.
+- **Event-driven projections** consumed from Redpanda, partitioned by aggregate id, feeding Redis-backed read models that serve a Next.js dashboard.
+
+The dashboard includes a replay viewer that reconstructs a balance from raw events, folding the log one event at a time. It makes the premise of the whole system visible rather than asking you to take it on faith.
+
+## The tradeoffs
+
+Event sourcing is not free, and the project would be dishonest if it pretended otherwise.
+
+Reads cost more as the log grows, which is what snapshots exist to address. The read side is eventually consistent, so projection lag stops being an implementation detail and becomes a health signal you have to monitor and alert on. Event schemas are append-only forever, because history has to stay readable by every future version of the code.
+
+This design earns its keep in ledgers, payments, and audit-heavy domains. For ordinary CRUD it would be an expensive mistake.
+
+## Verification
+
+The full system comes up with one command, including the event store, broker, cache, three services, the dashboard, and Prometheus with Grafana. Projectors scale horizontally, read models can be dropped and rebuilt from the log, and a Testcontainers suite runs green in CI.

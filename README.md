@@ -1,43 +1,58 @@
-# Astro Starter Kit: Minimal
+# abhishekjani.dev
 
-```sh
-npm create astro@latest -- --template minimal
+Personal site. Single page with anchored sections, plus unlisted case study
+pages for each project.
+
+Built with [Astro](https://astro.build) and Tailwind v4. Static output, no
+JavaScript bundles: the only client-side code is a theme toggle, a scroll-spy
+nav, and an IntersectionObserver that counts the project metrics up when they
+come into view.
+
+## Running it
+
+```bash
+npm install
+npm run dev        # http://localhost:4321
+npm run build      # static output to dist/
+npm run preview    # serve the built site
+npm run og         # regenerate public/og.png
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Layout
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```
+src/
+  assets/          headshot, processed by Astro's image pipeline
+  components/      Nav, Footer, WorkEntry, ThemeToggle
+  content/
+    projects/      one MDX file per project: frontmatter + case study
+    posts/         blog posts (draft: true is excluded everywhere)
+  layouts/Base     head, theme script, scroll reveal, metric counters
+  lib/
+    site.ts        name, links, nav sections
+    experience.ts  roles and education
+    skills.ts      skill groups, one entry per tool with its icon
+    brand.ts       official brand colours, adjusted per theme for legibility
+  pages/
+    index.astro    the single page
+    projects/      case study route (noindex, unlisted)
+    writing/       blog index and posts
+  styles/global    design tokens, motion, prose, skill chips
+scripts/og.mjs     generates the link-preview card with Satori
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Content
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Projects live in `src/content/projects/*.mdx`. Frontmatter is validated by a
+Zod schema in `src/content.config.ts`, so a missing or misspelled field fails
+the build rather than rendering something broken.
 
-Any static assets, like images, can be placed in the `public/` directory.
+Posts go in `src/content/posts/`. Copy `template.md`, set `draft: false` when
+ready. Drafts are excluded from the site, the RSS feed, and the sitemap.
 
-## 🧞 Commands
+## Conventions
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- Design tokens are CSS custom properties in `styles/global.css`. Light is the
+  base definition; dark redefines the values only.
+- One radius scale (4px), one accent colour, cool neutrals throughout.
+- Prose avoids em-dashes.

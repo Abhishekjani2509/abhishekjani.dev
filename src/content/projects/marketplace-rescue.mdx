@@ -1,0 +1,41 @@
+---
+title: "Marketplace Rescue"
+tagline: "Agents that decide what intervention to run by reading what worked last time."
+year: "2026"
+track: "agents"
+kind: "team"
+stack: ["Python", "FastAPI", "Graph memory"]
+repo: "https://github.com/Abhishekjani2509/marketplace-rescue"
+metrics:
+  - value: "3"
+    label: "specialist agents combining live state with history"
+order: 6
+---
+
+Built at the Memory Meets Motion hackathon in San Francisco, August 2026.
+
+## The problem
+
+Marketplaces lose value continuously to short lived supply and demand imbalance. A restaurant that can handle 100 orders an hour is sitting at 29 on a Friday evening with 38 minutes left in the window. That is lost revenue on both sides, and it is happening across thousands of restaurants in windows too small and too frequent for an operations team to work through one at a time.
+
+Detecting that is not hard. Knowing what to do about it is.
+
+## Why the obvious answer is wrong
+
+The generic response is to send a discount. That is usually the wrong call, and the reason is worth stating precisely: a 20% discount converts better than a 15% one, so a system optimizing for conversion picks it every time. But if the restaurant's margin cannot absorb 20%, the marketplace has just traded a short term GMV bump for a restaurant relationship it is about to lose.
+
+It is a decision problem rather than a detection problem. And decisions get better with memory.
+
+## How it works
+
+The loop runs live event, then memory, then decision, then action, then outcome, and writes the outcome back into memory.
+
+When a demand signal shows a restaurant running under pace with time still on the clock, the system queries a graph of past interventions at that specific restaurant under similar conditions: what was tried, what it converted at, and what it cost the restaurant in margin. Three specialist agents combine that history with live state into one concrete action, which is then executed as a real pipeline returning a real campaign result. That result becomes a new node in the graph.
+
+The recommendation is generated from the graph rather than hardcoded. Given the seeded data, the agent responsible for restaurant economics rejects the 20% discount and says why: it converts better, at 22.6% against 13.3%, but averaged a 60 dollar margin loss across six campaigns at that restaurant. Change the seed data and that reasoning changes with it.
+
+## It measurably improves
+
+Running the loop twice moves every number in the trace. The campaign created by the first run becomes the top comparable row in the second, because it is the closest capacity match anywhere in the graph. The evidence base for the 15% intervention grows from nine campaigns to ten, and the expected order count moves from roughly 21 to roughly 29.
+
+That is the part I find genuinely interesting. The system is not learning in the model weights sense. It is accumulating specific, queryable, local evidence, and getting better because it has more of it.

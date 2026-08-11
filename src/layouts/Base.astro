@@ -1,0 +1,174 @@
+---
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import ThemeScript from "../components/ThemeScript.astro";
+import { site } from "../lib/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Set on long-form pages so search engines get the article type. */
+  article?: boolean;
+  /** Unlisted pages: reachable by direct link, kept out of search results. */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = site.description,
+  article = false,
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} | ${site.name}` : `${site.name}, ${site.role}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.url);
+const ogImage = new URL("/og.png", Astro.site ?? site.url);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonical} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${site.name}, writing`}
+      href="/rss.xml"
+    />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.fullName} />
+    {/* "follow" so the links out of an unlisted page still carry weight. */}
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <meta property="og:type" content={article ? "article" : "website"} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <ThemeScript />
+  </head>
+
+  <body class="min-h-[100dvh]">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[4px] focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:text-canvas"
+    >
+      Skip to content
+    </a>
+
+    <Nav />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+
+    <script>
+      // Scroll reveal via IntersectionObserver. No scroll listener, no state
+      // on the main thread per frame. Elements are revealed once and then
+      // unobserved so long pages do not accumulate work.
+      const reveal = () => {
+        const targets = document.querySelectorAll("[data-reveal]");
+        if (!targets.length) return;
+
+        const reduced = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        // Under reduced motion the CSS never hides anything, so there is
+        // nothing to observe.
+        if (reduced) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          },
+          { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
+        );
+
+        targets.forEach((el) => observer.observe(el));
+      };
+
+      // Metric count-up. The numbers are the evidence on this site, so they
+      // earn a moment of attention when they arrive. Values live in a data
+      // attribute, so the served HTML always contains the final number and
+      // the animation only ever replaces text that is already correct.
+      const counters = () => {
+        const targets =
+          document.querySelectorAll<HTMLElement>("[data-count]");
+        if (!targets.length) return;
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          return;
+        }
+
+        const run = (el: HTMLElement) => {
+          const raw = el.dataset.count ?? "";
+          const match = raw.match(/^(\d+(?:\.\d+)?)(.*)$/);
+          if (!match) return;
+
+          const target = Number(match[1]);
+          const suffix = match[2];
+          // Counting to zero animates nothing, and "0 balances stored" is
+          // the point rather than a progression.
+          if (!target) return;
+
+          const decimals = (match[1].split(".")[1] ?? "").length;
+          const duration = 850;
+          const started = performance.now();
+
+          const frame = (now: number) => {
+            const t = Math.min((now - started) / duration, 1);
+            // Cubic ease-out: fast arrival, gentle settle.
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = (target * eased).toFixed(decimals) + suffix;
+            if (t < 1) requestAnimationFrame(frame);
+            else el.textContent = raw;
+          };
+
+          requestAnimationFrame(frame);
+        };
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              run(entry.target as HTMLElement);
+              observer.unobserve(entry.target);
+            }
+          },
+          { threshold: 0.6 },
+        );
+
+        targets.forEach((el) => observer.observe(el));
+      };
+
+      reveal();
+      counters();
+    </script>
+
+    <noscript>
+      <style>
+        /* Without JS the observer never fires, so nothing would ever become
+           visible. Opt out of the animation entirely instead. */
+        [data-reveal] {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      </style>
+    </noscript>
+  </body>
+</html>

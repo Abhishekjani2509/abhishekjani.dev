@@ -1,17 +1,252 @@
 ---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import Base from "../layouts/Base.astro";
+import WorkEntry from "../components/WorkEntry.astro";
+import { site } from "../lib/site";
+import { experience, education } from "../lib/experience";
+import { skills } from "../lib/skills";
+import { brandColor } from "../lib/brand";
 
+const projects = (await getCollection("projects")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base>
+  <!-- Home. Left-aligned and capped at two lines, with the actions above the
+       fold. No image by design, so the type carries it. -->
+  <section
+    id="home"
+    data-section
+    class="mx-auto max-w-5xl px-5 pb-20 pt-20 sm:px-8 sm:pb-24 sm:pt-24"
+  >
+    <h1
+      class="font-display text-[3rem] font-semibold leading-[1.02] tracking-[-0.04em] text-ink sm:text-[4.25rem] lg:text-[5rem]"
+      data-enter
+      style="animation-delay: 60ms"
+    >
+      {site.name}
+    </h1>
+
+    <p
+      class="mt-7 max-w-[56ch] text-[18px] leading-relaxed text-ink-secondary sm:text-[20px]"
+      data-enter
+      style="animation-delay: 180ms"
+    >
+      Software engineer building backend services that hold up in production,
+      from schema design and API contracts through CI/CD and cloud deployment.
+      Most recently, AI agent infrastructure. Based in {site.location}.
+    </p>
+
+    <div
+      class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3"
+      data-enter
+      style="animation-delay: 300ms"
+    >
+      {
+        [
+          { href: site.github, label: "GitHub", icon: "ph:github-logo" },
+          { href: site.linkedin, label: "LinkedIn", icon: "ph:linkedin-logo" },
+        ].map((link) => (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            class="group inline-flex items-center gap-2 rounded-[4px] text-[16px] text-ink-secondary transition-colors hover:text-accent"
+          >
+            <Icon
+              name={link.icon}
+              class="size-[19px] text-ink-muted transition-colors group-hover:text-accent"
+              aria-hidden="true"
+            />
+            <span class="underline decoration-rule-strong decoration-1 underline-offset-4 transition-colors group-hover:decoration-accent">
+              {link.label}
+            </span>
+            <span class="sr-only">(opens in a new tab)</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- About. Prose, then education, which is biographical rather than a
+       separate credential to hunt for. -->
+  <section id="about" data-section class="mx-auto max-w-5xl px-5 pt-8 sm:px-8">
+    <h2 class="text-[15px] font-medium text-ink-secondary">About</h2>
+
+    <div class="prose mt-6" data-reveal>
+      <p>
+        I'm a software engineer. I finished my M.S. in Computer Science at Cal
+        State Fullerton in May 2026.
+      </p>
+
+      <p>
+        Most of what I build has to hold up when something goes wrong. A wallet
+        ledger that rebuilds every balance by replaying its event log. A proxy
+        that cuts token spend and then has to prove it didn't change the answer.
+        I like working under that kind of constraint. It makes you say out loud
+        what happens on failure instead of hoping it doesn't come up.
+      </p>
+
+      <p>
+        This past year pulled me toward AI agents, and the hard parts turned out
+        to be familiar ones: keeping events in order across processes, checking
+        that a system actually did what it said, and making any of it readable
+        to the person watching.
+      </p>
+
+      <p>
+        I also taught Python and AI at Fullerton for a year and a half, around
+        40 students a section. Reading that many submissions changes how you
+        write code. You start noticing every way an instruction can be misread.
+      </p>
+
+      <p>
+        I'm in {site.location} and looking for a full-time software engineering
+        role. If you're hiring for backend, distributed systems, or AI
+        infrastructure, <a href={`mailto:${site.email}`}>email me</a>.
+      </p>
+    </div>
+
+    <!-- Divided pair rather than cards. The rule between them does the work a
+         border would, without boxing two items that belong together. -->
+    <div
+      class="mt-14 grid border-t border-rule sm:grid-cols-2 sm:divide-x sm:divide-rule"
+    >
+      {
+        education.map((e, i) => (
+          <div
+            class:list={[
+              "py-9 sm:py-10",
+              i === 0
+                ? "sm:pr-10"
+                : "border-t border-rule sm:border-t-0 sm:pl-10",
+            ]}
+            data-reveal
+          >
+            <p class="font-mono text-[14px] text-accent tnum">{e.period}</p>
+
+            <h3 class="mt-3 text-[1.375rem] font-semibold tracking-[-0.02em] text-ink">
+              {e.degree}
+            </h3>
+
+            <p class="mt-2 text-[16px] leading-relaxed text-ink-secondary">
+              {e.org}
+            </p>
+
+            <p class="mt-1 text-[15px] text-ink-muted">{e.place}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Experience. Period-keyed rows, since the dates are what a hiring manager
+       scans first. -->
+  <section
+    id="experience"
+    data-section
+    class="mx-auto mt-24 max-w-5xl px-5 sm:px-8"
+  >
+    <h2 class="text-[15px] font-medium text-ink-secondary">Experience</h2>
+
+    <div class="mt-6">
+      {
+        experience.map((job) => (
+          <div
+            class="grid gap-3 border-t border-rule py-10 sm:grid-cols-[10rem_1fr] sm:gap-10"
+            data-reveal
+          >
+            <p class="font-mono text-[14px] leading-relaxed text-ink-muted">
+              {job.period}
+            </p>
+
+            <div>
+              <h3 class="text-[1.375rem] font-semibold tracking-[-0.02em] text-ink">
+                {job.role}
+              </h3>
+              <p class="mt-1 text-[16px] text-ink-secondary">
+                {job.org}
+                <span class="text-ink-muted"> / {job.place}</span>
+              </p>
+              <p class="mt-4 max-w-[62ch] text-[16.5px] leading-relaxed text-ink-secondary">
+                {job.summary}
+              </p>
+              <ul class="mt-3 max-w-[62ch] space-y-2">
+                {job.detail.map((d) => (
+                  <li class="relative pl-4 text-[16px] leading-relaxed text-ink-secondary before:absolute before:left-0 before:top-[0.7em] before:size-1 before:rounded-full before:bg-rule-strong">
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Projects. One list, no sub-categories: every project is presented the
+       same way and the reader judges them on the work. -->
+  <section
+    id="projects"
+    data-section
+    class="mx-auto mt-24 max-w-5xl px-5 sm:px-8"
+  >
+    <h2 class="text-[15px] font-medium text-ink-secondary">Projects</h2>
+
+    <div class="mt-6">
+      {projects.map((entry) => <WorkEntry entry={entry} />)}
+    </div>
+  </section>
+
+  <!-- Skills. Grouped into clusters rather than one long keyword list. -->
+  <section id="skills" data-section class="mx-auto mt-24 max-w-5xl px-5 sm:px-8">
+    <h2 class="text-[15px] font-medium text-ink-secondary">Skills</h2>
+
+    <div class="mt-6">
+      {
+        skills.map((s) => (
+          <div
+            class="grid gap-4 border-t border-rule py-7 sm:grid-cols-[12rem_1fr] sm:gap-10"
+            data-reveal
+          >
+            <h3 class="text-[15.5px] font-medium text-ink">{s.group}</h3>
+
+            <div>
+              <ul class="flex flex-wrap gap-2">
+                {s.items.map((item) => {
+                  const brand = brandColor(item.icon);
+                  return (
+                    <li
+                      class="skill-chip"
+                      style={
+                        brand
+                          ? `--brand:${brand.light};--brand-dark:${brand.dark}`
+                          : undefined
+                      }
+                    >
+                      <Icon
+                        name={item.icon}
+                        class="size-[15px]"
+                        aria-hidden="true"
+                      />
+                      {item.name}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {s.note && (
+                <p class="mt-3.5 max-w-[62ch] text-[15px] leading-relaxed text-ink-muted">
+                  {s.note}
+                </p>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Base>

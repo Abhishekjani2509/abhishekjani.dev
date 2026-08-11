@@ -1,0 +1,41 @@
+---
+title: "Crew"
+tagline: "Five agents you watch work instead of reading a transcript afterward."
+year: "2026"
+track: "agents"
+kind: "team"
+role: "Desktop dock UI and the narration pipeline"
+team: "5 people"
+stack: ["Swift", "AppKit", "Node.js", "MCP"]
+repo: "https://github.com/Abhishekjani2509/crew"
+metrics:
+  - value: "45s"
+    label: "from one spoken sentence to done"
+  - value: "5"
+    label: "agents narrating in parallel"
+  - value: "3"
+    label: "processes behind frozen HTTP contracts"
+order: 3
+---
+
+## What it is
+
+You say one sentence out loud. Five characters appear along the bottom of your screen and work through your inbox, calendar, and messages, handing tasks between themselves and narrating what they are doing as they do it. About forty five seconds later it is done, and you never touched the machine after the first sentence.
+
+If an agent hits a decision only you can make while you are away from the desk, it calls your actual phone, asks the question out loud, and the crew continues from your spoken answer.
+
+## My part
+
+This was a five person build. I owned the desktop dock and the narration pipeline that drives it, plus the interface contract work that let five people on five machines build in parallel.
+
+**The dock UI.** Characters, speech bubbles, and narration pacing, written against AppKit. The design goal was that five parallel agents should be something you watch rather than a log you read afterward, which is a presentation problem before it is an agent problem.
+
+**Event ordering.** The first version sent narration lines as fire and forget POSTs. They raced. Lines arrived out of sequence, so the scheduler would announce a booking before the agent that found the slot had spoken. Watching agents contradict each other in real time is worse than reading a correct transcript, so ordering was not a polish item. It was the feature.
+
+**Pacing.** Early versions used guessed timeouts between lines, which meant characters either talked over each other or left dead air. I changed pacing to derive from measured speech duration, so the dock advances when a line actually finishes rather than when a timer says it probably has.
+
+**Frozen contracts.** We defined the HTTP contracts between the three processes on day one and did not change them. That is the only reason five people building separate pieces on separate machines converged into a working demo instead of an integration weekend.
+
+## What I took from it
+
+The hard problems in multi-agent systems were not in the agents. They were in the seams: ordering guarantees between processes, deciding what the user sees and when, and agreeing on interfaces early enough that parallel work stays parallel. The agent reasoning was comparatively easy to get working and comparatively hard to make legible.
